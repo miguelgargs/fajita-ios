@@ -4,3 +4,6 @@
 [submodule "hackios-xnu-kernel"]
 	path = hackios-xnu-kernel
 	url = https://github.com/miguelgargs/hackios-xnu-kernel
+[submodule "theos"]
+	path = theos
+	url = https://github.com/theos/theos.git
