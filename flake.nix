@@ -25,12 +25,19 @@
             android-tools
             dtc
             uv
-	    llvm
+      	    llvm
+	          patchelf
           ];
           shellHook = ''
           export HACKIOS_CLANG="${pkgs.llvmPackages.clang-unwrapped}/bin/clang"
           export PATH="${pkgs.llvmPackages.clang-unwrapped}/bin:${pkgs.llvmPackages.lld}/bin:$PATH"
-	  export THEOS="$PWD/theos"
+	        export THEOS="$PWD/theos"
+	        export NIX_HOST_LOADER="${pkgs.stdenv.cc.bintools.dynamicLinker}"
+	        export HACKIOS_LD64_LIB_PATH="$THEOS/toolchain/linux/iphone/lib:$THEOS/toolchain/linux/iphone/lib64:${pkgs.lib.makeLibraryPath [
+           pkgs.libuuid
+           pkgs.stdenv.cc.cc.lib
+           pkgs.glibc
+          ]}"
         '';
         };
       });
