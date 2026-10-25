@@ -40,6 +40,11 @@
           xz
           gnumake
           gcc
+          flex
+          bison
+          m4
+          autoconf
+          automake
         ];
 
         shellHook = ''
