@@ -37,6 +37,8 @@
            pkgs.libuuid
            pkgs.stdenv.cc.cc.lib
            pkgs.glibc
+           pkgs.zlib
+           pkgs.ncurses5
           ]}"
         '';
         };
