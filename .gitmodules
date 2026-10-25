@@ -1,0 +1,6 @@
+[submodule "UniXNU-fajita"]
+	path = UniXNU-fajita
+	url = git@github.com:miguelgargs/UniXNU-fajita.git
+[submodule "hackios-xnu-kernel"]
+	path = hackios-xnu-kernel
+	url = https://github.com/miguelgargs/hackios-xnu-kernel
