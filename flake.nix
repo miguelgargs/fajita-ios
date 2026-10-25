@@ -9,7 +9,11 @@
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
 
-      clang = pkgs.llvmPackages.clang-unwrapped;
+      # Native x86_64 Linux compiler (Nix wrapper)
+hostClang = pkgs.llvmPackages.clang;
+
+# ARM64 cross-compiler (no Nix host flags)
+crossClang = pkgs.llvmPackages.clang-unwrapped;
       lld = pkgs.llvmPackages.lld;
 
       # Tools for the development environment
@@ -22,7 +26,7 @@
         uv
         gnumake
         llvm
-        clang
+        crossClang
         lld
         patchelf
         curl
@@ -65,8 +69,8 @@
         profile = ''
           export THEOS="$PWD/theos"
 
-          export HACKIOS_CLANG="${clang}/bin/clang"
-          export PATH="${clang}/bin:${lld}/bin:$PATH"
+          export HACKIOS_CLANG="${crossClang}/bin/clang"
+          export PATH="${hostClang}/bin:${pkgs.binutils}/bin:${lld}/bin:$PATH"
 
           export LD_LIBRARY_PATH="$THEOS/toolchain/linux/iphone/lib:$THEOS/toolchain/linux/iphone/lib64''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
         '';
@@ -92,8 +96,8 @@
             export THEOS="$PWD/theos"
 
             # Unwrapped LLVM toolchain for UEFI
-            export HACKIOS_CLANG="${clang}/bin/clang"
-            export PATH="${clang}/bin:${lld}/bin:$THEOS/toolchain/linux/iphone/bin:$PATH"
+            export HACKIOS_CLANG="${crossClang}/bin/clang"
+            export PATH="${hostClang}/bin:${lld}/bin:$THEOS/toolchain/linux/iphone/bin:$PATH"
 
             # NixOS ELF interpreter
             export NIX_HOST_LOADER="${pkgs.stdenv.cc.bintools.dynamicLinker}"
