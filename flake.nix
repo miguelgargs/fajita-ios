@@ -25,6 +25,7 @@
             android-tools
             dtc
             uv
+            clang
           ];
         };
       });
