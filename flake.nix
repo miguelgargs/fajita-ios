@@ -30,6 +30,7 @@
           shellHook = ''
           export HACKIOS_CLANG="${pkgs.llvmPackages.clang-unwrapped}/bin/clang"
           export PATH="${pkgs.llvmPackages.clang-unwrapped}/bin:${pkgs.llvmPackages.lld}/bin:$PATH"
+	  export THEOS="$PWD/theos"
         '';
         };
       });
