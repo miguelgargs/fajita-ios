@@ -1,66 +1,76 @@
+
 {
-  description = "Dev shell with git, python3, android-tools, dtc and uv";
+  description = "HackiOS Fajita - XNU development environment";
 
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  };
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-  outputs =
-    { self, nixpkgs }:
+  outputs = { self, nixpkgs }:
     let
-      systems = [
-        "x86_64-linux"
-        "aarch64-linux"
-        "x86_64-darwin"
-        "aarch64-darwin"
+      system = "x86_64-linux";
+      pkgs = nixpkgs.legacyPackages.${system};
+
+      clang = pkgs.llvmPackages.clang-unwrapped;
+      lld = pkgs.llvmPackages.lld;
+
+      runtimeLibs = pkgs.lib.makeLibraryPath [
+        pkgs.libuuid
+        pkgs.zlib
+        pkgs.ncurses5
+        pkgs.stdenv.cc.cc.lib
+        pkgs.glibc
       ];
-      forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
     in
     {
-      devShells = forAllSystems (pkgs: {
-        default = pkgs.mkShell {
-          packages = with pkgs; [
-            git
-            python3
-            android-tools
-            dtc
-            uv
-            llvm
-            patchelf
-          ];
-          shellHook = ''
-                      export HACKIOS_CLANG="${pkgs.llvmPackages.clang-unwrapped}/bin/clang"
-                      export PATH="${pkgs.llvmPackages.clang-unwrapped}/bin:${pkgs.llvmPackages.lld}/bin:$PATH"
-            	        export THEOS="$PWD/theos"
-            	        export NIX_HOST_LOADER="${pkgs.stdenv.cc.bintools.dynamicLinker}"
-            	        export HACKIOS_LD64_LIB_PATH="$THEOS/toolchain/linux/iphone/lib:$THEOS/toolchain/linux/iphone/lib64:${
-                       pkgs.lib.makeLibraryPath [
-                         pkgs.libuuid
-                         pkgs.stdenv.cc.cc.lib
-                         pkgs.glibc
-                         pkgs.zlib
-                         pkgs.ncurses5
-                       ]
-                     }"
-                      # Patch the downloaded linker for NixOS
-            LD64="$THEOS/toolchain/linux/iphone/bin/ld64"
-            NIX_INTERPRETER="${pkgs.stdenv.cc.bintools.dynamicLinker}"
+      devShells.${system}.default = pkgs.mkShell {
+        packages = with pkgs; [
+          git
+          bash
+          python3
+          android-tools
+          dtc
+          uv
+          gnumake
+          llvm
+          clang
+          lld
+          patchelf
+        ];
 
-            if [ -f "$LD64" ]; then
-              if [ "$(patchelf --print-interpreter "$LD64")" != "$NIX_INTERPRETER" ] ||
-                 [ "$(patchelf --print-rpath "$LD64")" != "$HACKIOS_LD64_LIB_PATH" ]; then
+        shellHook = ''
+          # Project paths
+          export THEOS="$PWD/theos"
 
-                patchelf \
-                  --set-interpreter "$NIX_INTERPRETER" \
-                  --force-rpath \
-                  --set-rpath "$HACKIOS_LD64_LIB_PATH" \
-                  "$LD64"
+          # Unwrapped LLVM toolchain for UEFI
+          export HACKIOS_CLANG="${clang}/bin/clang"
+          export PATH="${clang}/bin:${lld}/bin:$THEOS/toolchain/linux/iphone/bin:$PATH"
 
-                echo "Patched ld64 for NixOS"
-              fi
+          # NixOS ELF interpreter
+          export NIX_HOST_LOADER="${pkgs.stdenv.cc.bintools.dynamicLinker}"
+
+          # Runtime libraries for legacy Apple toolchain
+          export HACKIOS_LD64_LIB_PATH="$THEOS/toolchain/linux/iphone/lib:$THEOS/toolchain/linux/iphone/lib64:${runtimeLibs}"
+
+          # Patch the downloaded ld64 binary when necessary
+          LD64="$THEOS/toolchain/linux/iphone/bin/ld64"
+
+          if [ -f "$LD64" ]; then
+            CURRENT_INTERPRETER="$(patchelf --print-interpreter "$LD64")"
+            CURRENT_RPATH="$(patchelf --print-rpath "$LD64")"
+
+            if [ "$CURRENT_INTERPRETER" != "$NIX_HOST_LOADER" ] ||
+               [ "$CURRENT_RPATH" != "$HACKIOS_LD64_LIB_PATH" ]; then
+
+              patchelf \
+                --set-interpreter "$NIX_HOST_LOADER" \
+                --force-rpath \
+                --set-rpath "$HACKIOS_LD64_LIB_PATH" \
+                "$LD64"
+
+              echo "Patched ld64 for NixOS"
             fi
-          '';
-        };
-      });
+          fi
+        '';
+      };
     };
 }
+
