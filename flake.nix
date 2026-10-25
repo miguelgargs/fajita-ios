@@ -69,6 +69,18 @@
               echo "Patched ld64 for NixOS"
             fi
           fi
+	  # Fix runtime dependencies of the legacy LLVM LTO library
+LTO="$THEOS/toolchain/linux/iphone/lib/libLTO.so.10svn"
+
+if [ -f "$LTO" ] &&
+   [ "$(patchelf --print-rpath "$LTO")" != "$HACKIOS_LD64_LIB_PATH" ]; then
+
+  patchelf \
+    --set-rpath "$HACKIOS_LD64_LIB_PATH" \
+    "$LTO"
+
+  echo "Patched libLTO for NixOS"
+fi
         '';
       };
     };
