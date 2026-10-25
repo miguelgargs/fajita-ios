@@ -25,8 +25,13 @@
             android-tools
             dtc
             uv
-            clang
+            llvmPackages.clang-unwrapped
+            llvmPackages.lld
           ];
+          shellHook = ''
+          export HACKIOS_CLANG="${pkgs.llvmPackages.clang-unwrapped}/bin/clang"
+          export PATH="${pkgs.llvmPackages.clang-unwrapped}/bin:${pkgs.llvmPackages.lld}/bin:$PATH"
+        '';
         };
       });
     };
