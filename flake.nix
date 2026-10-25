@@ -35,6 +35,11 @@
           clang
           lld
           patchelf
+          curl
+          perl
+          xz
+          gnumake
+          gcc
         ];
 
         shellHook = ''
