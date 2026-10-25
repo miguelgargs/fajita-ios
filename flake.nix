@@ -25,8 +25,7 @@
             android-tools
             dtc
             uv
-            llvmPackages.clang-unwrapped
-            llvmPackages.lld
+	    llvm
           ];
           shellHook = ''
           export HACKIOS_CLANG="${pkgs.llvmPackages.clang-unwrapped}/bin/clang"
